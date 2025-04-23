@@ -26,10 +26,8 @@ export default function AddTripScreen() {
   return (
     <PaperProvider>
       <View style={styles.container}>
-        <Appbar.Header>
-          <Appbar.BackAction
-            onPress={() => router.push("/screens/HomeScreen")}
-          />
+        <Appbar.Header mode="center-aligned">
+          <Appbar.BackAction onPress={() => router.back()} />
           <Appbar.Content title="Nova Viagem" />
         </Appbar.Header>
 

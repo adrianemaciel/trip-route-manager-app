@@ -1,50 +1,60 @@
-# Welcome to your Expo app 👋
+## O Trip Route Manager é um aplicativo móvel desenvolvido em React Native com Expo para planejamento e gerenciamento de viagens. Com ele, os usuários podem:
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+- Criar roteiros de viagem completos
 
-## Get started
+- Visualizar rotas em mapas
 
-1. Install dependencies
+- Organizar múltiplos destinos
 
-   ```bash
-   npm install
-   ```
+## Funcionalidades Principais
 
-2. Start the app
+### Cadastro de Viagens
 
-   ```bash
-    npx expo start
-   ```
+- Adição de título, destino, datas e meio de transporte
 
-In the output, you'll find options to open the app in a
+- Descrição detalhada da viagem
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Validação de campos obrigatórios
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Gerenciamento
 
-## Get a fresh project
+- Listagem de todas as viagens planejadas
 
-When you're ready, run:
+- Edição completa de viagens existentes
 
-```bash
-npm run reset-project
+- Exclusão de viagens
+
+- Visualização em mapa
+
+### Experiência do Usuário
+
+- Interface intuitiva com Material Design
+
+- Persistência de dados local (AsyncStorage)
+
+## Tecnologias Utilizadas
+
+- Frontend: React Native + Expo
+
+- Navegação: React Navigation
+
+- UI: React Native Paper
+
+- Mapas: react-native-maps (OSRM/Mapbox)
+
+- Armazenamento: AsyncStorage
+
+- Ferramentas: TypeScript, Git, GitHub
+
+## Execução
+
+```
+git clone https://github.com/adrianemaciel/trip-route-manager-app.git
+cd trip-route-manager
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Status
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Projeto em desenvolvimento

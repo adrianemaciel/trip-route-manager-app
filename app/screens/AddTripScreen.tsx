@@ -6,6 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import {
   Appbar,
@@ -14,6 +15,17 @@ import {
   TextInput,
   RadioButton,
 } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type Trip = {
+  id: string;
+  title: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  transport: string;
+  description: string;
+};
 
 export default function AddTripScreen() {
   const navigation = useNavigation();
@@ -23,8 +35,70 @@ export default function AddTripScreen() {
   const [endDate, setEndDate] = useState("");
   const [transport, setTransport] = useState("");
   const [description, setDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const transports = ["Avião", "Carro", "Ônibus"];
+
+  const validateFields = () => {
+    if (!title.trim()) {
+      Alert.alert("Campo obrigatório", "Por favor, insira o título da viagem");
+      return false;
+    }
+    if (!destination.trim()) {
+      Alert.alert("Campo obrigatório", "Por favor, insira o destino");
+      return false;
+    }
+    if (!startDate.trim()) {
+      Alert.alert("Campo obrigatório", "Por favor, insira a data de início");
+      return false;
+    }
+    if (!endDate.trim()) {
+      Alert.alert("Campo obrigatório", "Por favor, insira a data de término");
+      return false;
+    }
+    return true;
+  };
+
+  const saveTrip = async () => {
+    if (!validateFields()) return;
+
+    setIsLoading(true);
+
+    try {
+      const newTrip: Trip = {
+        id: Date.now().toString(),
+        title,
+        destination,
+        startDate,
+        endDate,
+        transport,
+        description,
+      };
+
+      const existingTrips = await AsyncStorage.getItem("@trips");
+      let tripsArray: Trip[] = [];
+
+      if (existingTrips) {
+        tripsArray = JSON.parse(existingTrips);
+      }
+
+      tripsArray.push(newTrip);
+
+      await AsyncStorage.setItem("@trips", JSON.stringify(tripsArray));
+
+      Alert.alert("Sucesso", "Viagem salva com sucesso!", [
+        {
+          text: "OK",
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      console.error("Erro ao salvar viagem:", error);
+      Alert.alert("Erro", "Não foi possível salvar a viagem");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -80,7 +154,6 @@ export default function AddTripScreen() {
             value={startDate}
             onChangeText={setStartDate}
             style={styles.input}
-            keyboardType="numeric"
           />
 
           <Text variant="titleMedium" style={styles.sectionTitle}>
@@ -93,7 +166,6 @@ export default function AddTripScreen() {
             value={endDate}
             onChangeText={setEndDate}
             style={styles.input}
-            keyboardType="numeric"
           />
 
           <Text variant="titleMedium" style={styles.sectionTitle}>
@@ -126,13 +198,16 @@ export default function AddTripScreen() {
               mode="outlined"
               style={[styles.button, styles.cancelButton]}
               onPress={() => navigation.goBack()}
+              disabled={isLoading}
             >
               Cancelar
             </Button>
             <Button
               mode="contained"
               style={[styles.button, styles.saveButton]}
-              onPress={() => console.log("Viagem salva!")}
+              onPress={saveTrip}
+              loading={isLoading}
+              disabled={isLoading}
             >
               Salvar Viagem
             </Button>

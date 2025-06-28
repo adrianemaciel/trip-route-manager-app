@@ -1,5 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
-import { useState } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
@@ -27,17 +27,31 @@ type Trip = {
   description: string;
 };
 
+type RouteParams = {
+  tripToEdit?: Trip;
+};
+
 export default function AddTripScreen() {
   const navigation = useNavigation();
-  const [title, setTitle] = useState("");
-  const [destination, setDestination] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [transport, setTransport] = useState("");
-  const [description, setDescription] = useState("");
+  const route = useRoute();
+  const { tripToEdit } = (route.params as RouteParams) || {};
+
+  const [id] = useState(tripToEdit?.id || Date.now().toString());
+  const [title, setTitle] = useState(tripToEdit?.title || "");
+  const [destination, setDestination] = useState(tripToEdit?.destination || "");
+  const [startDate, setStartDate] = useState(tripToEdit?.startDate || "");
+  const [endDate, setEndDate] = useState(tripToEdit?.endDate || "");
+  const [transport, setTransport] = useState(tripToEdit?.transport || "");
+  const [description, setDescription] = useState(tripToEdit?.description || "");
   const [isLoading, setIsLoading] = useState(false);
 
   const transports = ["Avião", "Carro", "Ônibus"];
+
+  useEffect(() => {
+    if (tripToEdit) {
+      navigation.setOptions({ title: "Editar Viagem" });
+    }
+  }, [tripToEdit]);
 
   const validateFields = () => {
     if (!title.trim()) {
@@ -65,8 +79,8 @@ export default function AddTripScreen() {
     setIsLoading(true);
 
     try {
-      const newTrip: Trip = {
-        id: Date.now().toString(),
+      const trip: Trip = {
+        id,
         title,
         destination,
         startDate,
@@ -76,22 +90,30 @@ export default function AddTripScreen() {
       };
 
       const existingTrips = await AsyncStorage.getItem("@trips");
-      let tripsArray: Trip[] = [];
+      let tripsArray: Trip[] = existingTrips ? JSON.parse(existingTrips) : [];
 
-      if (existingTrips) {
-        tripsArray = JSON.parse(existingTrips);
+      if (tripToEdit) {
+        // Editar viagem existente
+        tripsArray = tripsArray.map((t) => (t.id === trip.id ? trip : t));
+      } else {
+        // Adicionar nova viagem
+        tripsArray.push(trip);
       }
-
-      tripsArray.push(newTrip);
 
       await AsyncStorage.setItem("@trips", JSON.stringify(tripsArray));
 
-      Alert.alert("Sucesso", "Viagem salva com sucesso!", [
-        {
-          text: "OK",
-          onPress: () => navigation.goBack(),
-        },
-      ]);
+      Alert.alert(
+        "Sucesso",
+        tripToEdit
+          ? "Viagem atualizada com sucesso!"
+          : "Viagem salva com sucesso!",
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
     } catch (error) {
       console.error("Erro ao salvar viagem:", error);
       Alert.alert("Erro", "Não foi possível salvar a viagem");
@@ -104,7 +126,9 @@ export default function AddTripScreen() {
     <View style={styles.container}>
       <Appbar.Header mode="center-aligned">
         <Appbar.BackAction onPress={() => navigation.goBack()} />
-        <Appbar.Content title="Adicionar Nova Viagem" />
+        <Appbar.Content
+          title={tripToEdit ? "Editar Viagem" : "Adicionar Nova Viagem"}
+        />
       </Appbar.Header>
 
       <KeyboardAvoidingView
@@ -116,8 +140,9 @@ export default function AddTripScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <Text variant="bodyLarge" style={styles.description}>
-            Planeje sua próxima aventura adicionando os detalhes da viagem
-            abaixo.
+            {tripToEdit
+              ? "Atualize os detalhes da viagem"
+              : "Planeje sua próxima aventura adicionando os detalhes da viagem abaixo."}
           </Text>
 
           <Text variant="titleMedium" style={styles.sectionTitle}>

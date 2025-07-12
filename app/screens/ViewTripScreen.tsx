@@ -1,37 +1,98 @@
+import { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { View, StyleSheet } from "react-native";
 import { Appbar, Button, Card, Text, useTheme } from "react-native-paper";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { mockTrips, Trip } from "../services/mockRoutes";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView } from "react-native-gesture-handler";
-import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+type Trip = {
+  id: string;
+  title: string;
+  destination: string;
+  startDate: string;
+  endDate: string;
+  transport: string;
+  description: string;
+};
 
 type RootStackParamList = {
   Home: undefined;
-  AddTrip: undefined;
+  AddTrip: { tripToEdit?: Trip };
   Map: { trip: Trip };
 };
 
-type HomeScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Home"
->;
-
 export default function HomeScreen() {
-  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList, "Home">>();
   const theme = useTheme();
+  const [trips, setTrips] = useState<Trip[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Buscar viagens ao carregar a tela
+  useEffect(() => {
+    const fetchTrips = async () => {
+      try {
+        const savedTrips = await AsyncStorage.getItem("@trips");
+        if (savedTrips) {
+          setTrips(JSON.parse(savedTrips));
+        }
+      } catch (error) {
+        console.error("Erro ao carregar viagens:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTrips();
+  }, []);
+
+  // Atualizar lista quando voltar da tela de adição
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      const fetchTrips = async () => {
+        const savedTrips = await AsyncStorage.getItem("@trips");
+        if (savedTrips) {
+          setTrips(JSON.parse(savedTrips));
+        }
+      };
+      fetchTrips();
+    });
+
+    return unsubscribe;
+  }, [navigation]);
 
   const handleViewRoute = (trip: Trip) => {
     navigation.navigate("Map", { trip });
   };
+
+  const handleDeleteTrip = async (id: string) => {
+    try {
+      const updatedTrips = trips.filter((trip) => trip.id !== id);
+      await AsyncStorage.setItem("@trips", JSON.stringify(updatedTrips));
+      setTrips(updatedTrips);
+    } catch (error) {
+      console.error("Erro ao deletar viagem:", error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <Text>Carregando...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <Appbar.Header mode="center-aligned">
-        <Appbar.BackAction onPress={() => router.back()} />
+      <Appbar.BackAction onPress={() => navigation.goBack()} />
         <Appbar.Content
           title="Minhas Viagens"
           titleStyle={styles.headerTitle}
@@ -51,10 +112,12 @@ export default function HomeScreen() {
           variant="titleMedium"
           style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
         >
-          Gerencie todas as suas viagens em um só lugar.
+          {trips.length > 0
+            ? "Suas viagens planejadas"
+            : "Nenhuma viagem planejada ainda"}
         </Text>
 
-        {mockTrips.map((trip) => (
+        {trips.map((trip) => (
           <Card
             key={trip.id}
             mode="elevated"
@@ -75,7 +138,7 @@ export default function HomeScreen() {
                     { color: theme.colors.onSurfaceVariant },
                   ]}
                 >
-                  {trip.date}
+                  {trip.startDate} - {trip.endDate}
                 </Text>
                 <Text
                   variant="bodyMedium"
@@ -87,11 +150,18 @@ export default function HomeScreen() {
                   • {trip.transport}
                 </Text>
               </View>
+              {trip.description && (
+                <Text variant="bodyMedium" style={{ marginTop: 8 }}>
+                  {trip.description}
+                </Text>
+              )}
             </Card.Content>
             <Card.Actions style={styles.cardActions}>
               <Button
                 mode="text"
-                onPress={() => console.log("Editar viagem")}
+                onPress={() =>
+                  navigation.navigate("AddTrip", { tripToEdit: trip })
+                }
                 textColor={theme.colors.onSurface}
               >
                 Editar
@@ -99,7 +169,7 @@ export default function HomeScreen() {
               <Button
                 mode="text"
                 textColor="#e74c3c"
-                onPress={() => console.log("Excluir viagem")}
+                onPress={() => handleDeleteTrip(trip.id)}
               >
                 Excluir
               </Button>
@@ -124,6 +194,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     padding: 16,
+    paddingBottom: 80,
   },
   headerTitle: {
     fontWeight: "bold",

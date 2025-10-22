@@ -6,13 +6,7 @@ import MapScreen from "./screens/MapScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import HomeStack from "./navigation/HomeStack";
 
-const Tab = createBottomTabNavigator({
-  screens: {
-    Home: HomeStack,
-    Map: MapScreen,
-    Profile: ProfileScreen,
-  },
-});
+const Tab = createBottomTabNavigator();
 
 const theme = {
   ...MD3LightTheme,
@@ -28,14 +22,15 @@ export default function Index() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PaperProvider theme={theme}>
         <Tab.Navigator
-          initialRouteName="Home"
+          initialRouteName="HomeTab"
           screenOptions={{
+            headerShown: false,
             tabBarActiveTintColor: "#3498db",
             tabBarStyle: { backgroundColor: "white" },
           }}
         >
           <Tab.Screen
-            name="Home"
+            name="HomeTab"
             component={HomeStack}
             options={{
               tabBarLabel: "Início",
